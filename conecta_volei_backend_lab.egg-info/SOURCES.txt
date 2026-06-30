@@ -1,0 +1,11 @@
+pyproject.toml
+app/__init__.py
+app/main.py
+app/core/__init__.py
+app/core/config.py
+conecta_volei_backend_lab.egg-info/PKG-INFO
+conecta_volei_backend_lab.egg-info/SOURCES.txt
+conecta_volei_backend_lab.egg-info/dependency_links.txt
+conecta_volei_backend_lab.egg-info/requires.txt
+conecta_volei_backend_lab.egg-info/top_level.txt
+tests/test_health.py
