@@ -1,11 +1,12 @@
 from fastapi import FastAPI
 
+from app.api.router import router as api_router
+from app.core.config import settings
+
 app = FastAPI(
-    title="Conecta Volei Backend Lab",
+    title=settings.app_name,
     version="0.1.0",
-    description="Modular backend lab for the Conecta Volei applacation.",
+    description="Modular backend lab for the Conecta Volley application.",
 )
 
-@app.get("/health", tags=["system"])
-def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+app.include_router(api_router)

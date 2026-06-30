@@ -4,8 +4,16 @@ from app.main import app
 
 client = TestClient(app)
 
+
 def test_health_check_returns_ok() -> None:
-    response = client.get("/health")
+    response = client.get("/api/v1/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_readiness_check_returns_ready() -> None:
+    response = client.get("/api/v1/ready")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready"}
