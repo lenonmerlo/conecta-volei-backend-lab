@@ -1,0 +1,28 @@
+from pydantic import BaseModel, Field
+
+from app.domain.constants import PlayerStatus, PlayerType
+
+
+class PlayerCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+    nickname: str | None = Field(default=None, max_length=80)
+    whatsapp: str = Field(min_length=8, max_length=20)
+    gender: str = Field(min_length=1, max_length=1)
+
+class PlayerUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=120)
+    nickname: str | None = Field(default=None, max_length=80)
+    whatsapp: str | None = Field(default=None, min_length=8, max_length=20)
+    gender: str | None = Field(default=None, min_length=1, max_length=1)
+    status: PlayerStatus | None = None
+    warnings: int | None = Field(default=None, ge=0)
+
+class PlayerRead(BaseModel):
+    id: str
+    name: str
+    nickname: str | None = None
+    whatsapp: str
+    gender: str
+    type: PlayerType
+    status: PlayerStatus
+    warnings: int = 0
