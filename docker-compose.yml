@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: conecta-volei-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: conecta_volei_lab
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - conecta_volei_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d conecta_volei_lab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  conecta_volei_postgres_data:
