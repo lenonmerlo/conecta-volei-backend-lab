@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.database import Base
 from app.modules.games import model as game_model  # noqa: F401
 from app.modules.players import model as player_model  # noqa: F401
+from app.modules.registrations import model as registration_model  # noqa: F401
 
 config = context.config
 
