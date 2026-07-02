@@ -4,7 +4,6 @@ from sqlalchemy import text
 
 from app.core.database import SessionLocal
 from app.main import app
-from app.modules.games.service import clear_games
 from app.modules.registrations.service import clear_registrations
 
 
@@ -12,9 +11,9 @@ from app.modules.registrations.service import clear_registrations
 def client() -> TestClient:
     with SessionLocal() as session:
         session.execute(text("DELETE FROM players"))
+        session.execute(text("DELETE FROM games"))
         session.commit()
 
-    clear_games()
     clear_registrations()
     return TestClient(app)
 
