@@ -1,9 +1,8 @@
 from datetime import date
 
 from app.domain.constants import GameDay
+from app.modules.games.repository import GameRepository
 from app.modules.games.schemas import GameCreate, GameRead, GameUpdate
-
-_games: dict[str, GameRead] = {}
 
 
 def _get_game_day(game_date: date) -> GameDay:
@@ -20,19 +19,19 @@ def _build_game_id(game_day: GameDay, game_date: date) -> str:
     return f"{game_day.value}-{game_date.isoformat()}"
 
 
-def list_games() -> list[GameRead]:
-    return sorted(_games.values(), key=lambda game: (game.date, game.time))
+def list_games(repository: GameRepository) -> list[GameRead]:
+    return repository.list()
 
 
-def get_game(game_id: str) -> GameRead | None:
-    return _games.get(game_id)
+def get_game(repository: GameRepository, game_id: str) -> GameRead | None:
+    return repository.get(game_id)
 
 
-def create_game(payload: GameCreate) -> GameRead:
+def create_game(repository: GameRepository, payload: GameCreate) -> GameRead:
     game_day = _get_game_day(payload.date)
     game_id = _build_game_id(game_day, payload.date)
 
-    if game_id in _games:
+    if repository.get(game_id):
         raise ValueError("Este jogo já está cadastrado.")
 
     game = GameRead(
@@ -45,12 +44,15 @@ def create_game(payload: GameCreate) -> GameRead:
         notes=payload.notes.strip() if payload.notes else None,
     )
 
-    _games[game.id] = game
-    return game
+    return repository.create(game)
 
 
-def update_game(game_id: str, payload: GameUpdate) -> GameRead | None:
-    current_game = get_game(game_id)
+def update_game(
+        repository: GameRepository,
+        game_id: str,
+        payload: GameUpdate,
+) -> GameRead | None:
+    current_game = get_game(repository, game_id)
     if current_game is None:
         return None
 
@@ -60,7 +62,7 @@ def update_game(game_id: str, payload: GameUpdate) -> GameRead | None:
     next_day = _get_game_day(next_date)
     next_id = _build_game_id(next_day, next_date)
 
-    if next_id != game_id and next_id in _games:
+    if next_id != game_id and repository.get(next_id):
         raise ValueError("Este jogo já está cadastrado.")
 
     updated_game = current_game.model_copy(
@@ -82,15 +84,10 @@ def update_game(game_id: str, payload: GameUpdate) -> GameRead | None:
     )
 
     if next_id != game_id:
-        del _games[game_id]
+        return repository.replace_id(game_id, updated_game)
 
-    _games[next_id] = updated_game
-    return updated_game
-
-
-def delete_game(game_id: str) -> bool:
-    return _games.pop(game_id, None) is not None
+    return repository.update(updated_game)
 
 
-def clear_games() -> None:
-    _games.clear()
+def delete_game(repository: GameRepository, game_id: str) -> bool:
+    return repository.delete(game_id)

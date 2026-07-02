@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
+from app.modules.games.repository import GameRepository
 from app.modules.players.repository import PlayerRepository
 from app.modules.registrations import service
 from app.modules.registrations.schemas import (
@@ -19,6 +20,11 @@ def get_player_repository(
     db: Annotated[Session, Depends(get_db_session)],
 ) -> PlayerRepository:
     return PlayerRepository(db)
+
+def get_game_repository(
+    db: Annotated[Session, Depends(get_db_session)],
+) -> GameRepository:
+    return GameRepository(db)
 
 
 @router.get("", response_model=list[RegistrationRead])
@@ -37,9 +43,13 @@ def join_game(
         PlayerRepository,
         Depends(get_player_repository),
     ],
+    game_repository: Annotated[
+        GameRepository,
+        Depends(get_game_repository),
+    ],
 ) -> RegistrationRead:
     try:
-        return service.join_game(payload, player_repository)
+        return service.join_game(payload, player_repository, game_repository)
     except PermissionError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

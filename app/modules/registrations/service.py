@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.domain.constants import MAX_PLAYERS, PlayerStatus
+from app.modules.games.repository import GameRepository
 from app.modules.games.service import get_game
 from app.modules.players.repository import PlayerRepository
 from app.modules.players.service import get_player
@@ -65,8 +66,9 @@ def _next_slot(game_id: str, player_status: PlayerStatus) -> RegistrationSlot:
 def join_game(
     payload: RegistrationJoin,
     player_repository: PlayerRepository,
+    game_repository: GameRepository,
 ) -> RegistrationRead:
-    game = get_game(payload.game_id)
+    game = get_game(game_repository, payload.game_id)
     if game is None:
         raise ValueError("Game not found.")
 
