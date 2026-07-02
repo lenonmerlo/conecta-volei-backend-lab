@@ -5,7 +5,8 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.core.config import settings
 from app.core.database import Base
-from app.modules.players import model  # noqa: F401
+from app.modules.games import model as game_model  # noqa: F401
+from app.modules.players import model as player_model  # noqa: F401
 
 config = context.config
 
