@@ -1,27 +1,29 @@
 from uuid import uuid4
 
 from app.domain.constants import PlayerStatus, PlayerType
+from app.modules.players.repository import PlayerRepository
 from app.modules.players.schemas import PlayerCreate, PlayerRead, PlayerUpdate
 
-_players: dict[str, PlayerRead] = {}
 
-def list_players() -> list[PlayerRead]:
-    return sorted(_players.values(), key=lambda player: player.name.lower())
+def list_players(repository: PlayerRepository) -> list[PlayerRead]:
+    return repository.list()
 
-def get_player(player_id: str) -> PlayerRead | None:
-    return _players.get(player_id)
+def get_player(repository: PlayerRepository, player_id: str) -> PlayerRead | None:
+    return repository.get(player_id)
 
-def get_player_by_whatsapp(whatsapp: str) -> PlayerRead | None:
+def get_player_by_whatsapp(
+        repository: PlayerRepository,
+        whatsapp: str,
+) -> PlayerRead | None:
     normalized_whatsapp = whatsapp.strip()
+    return repository.get_by_whatsapp(normalized_whatsapp)
 
-    for player in _players.values():
-        if player.whatsapp == normalized_whatsapp:
-            return player
 
-    return None
-
-def create_player(payload: PlayerCreate) -> PlayerRead:
-    existing_player = get_player_by_whatsapp(payload.whatsapp)
+def create_player(
+        repository: PlayerRepository,
+        payload: PlayerCreate,
+) -> PlayerRead:
+    existing_player = get_player_by_whatsapp(repository, payload.whatsapp)
     if existing_player:
         raise ValueError("Este WhatsApp já está cadastrado.")
 
@@ -36,11 +38,14 @@ def create_player(payload: PlayerCreate) -> PlayerRead:
         warnings=0,
     )
 
-    _players[player.id] = player
-    return player
+    return repository.create(player)
 
-def update_player(player_id: str, payload: PlayerUpdate) -> PlayerRead | None:
-    current_player = get_player(player_id)
+def update_player(
+        repository: PlayerRepository,
+        player_id: str,
+        payload: PlayerUpdate,
+) -> PlayerRead | None:
+    current_player = get_player(repository, player_id)
     if current_player is None:
         return None
 
@@ -48,7 +53,7 @@ def update_player(player_id: str, payload: PlayerUpdate) -> PlayerRead | None:
 
     next_whatsapp = update_data.get("whatsapp")
     if next_whatsapp is not None:
-        existing_player = get_player_by_whatsapp(next_whatsapp)
+        existing_player = get_player_by_whatsapp(repository, next_whatsapp)
         if existing_player and existing_player.id != player_id:
             raise ValueError("Este WhatsApp já está cadastrado.")
 
@@ -68,11 +73,9 @@ def update_player(player_id: str, payload: PlayerUpdate) -> PlayerRead | None:
         },
     )
 
-    _players[player_id] = updated_player
-    return updated_player
+    return repository.update(updated_player)
 
-def delete_player(player_id: str) -> bool:
-    return _players.pop(player_id, None) is not None
 
-def clear_players() -> None:
-    _players.clear()
+def delete_player(repository: PlayerRepository, player_id: str) -> bool:
+    return repository.delete(player_id)
+

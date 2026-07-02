@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from app.domain.constants import MAX_PLAYERS, PlayerStatus
 from app.modules.games.service import get_game
+from app.modules.players.repository import PlayerRepository
 from app.modules.players.service import get_player
 from app.modules.registrations.schemas import (
     RegistrationJoin,
@@ -13,6 +14,7 @@ from app.modules.registrations.schemas import (
 
 _registrations: dict[str, RegistrationRead] = {}
 
+
 def list_registrations(game_id: str) -> list[RegistrationRead]:
     return sorted(
         [
@@ -20,15 +22,17 @@ def list_registrations(game_id: str) -> list[RegistrationRead]:
             for registration in _registrations.values()
             if registration.game_id == game_id
         ],
-        key=lambda registration: registration.registered_at
+        key=lambda registration: registration.registered_at,
     )
+
 
 def get_registration(registration_id: str) -> RegistrationRead | None:
     return _registrations.get(registration_id)
 
+
 def _get_player_registration(
-        game_id: str,
-        player_id: str,
+    game_id: str,
+    player_id: str,
 ) -> RegistrationRead | None:
     for registration in _registrations.values():
         if registration.game_id == game_id and registration.player_id == player_id:
@@ -36,14 +40,17 @@ def _get_player_registration(
 
     return None
 
+
 def _main_count(game_id: str) -> int:
     return sum(
         1
         for registration in _registrations.values()
         if (
-                registration.game_id == game_id
-                and registration.slot == RegistrationSlot.MAIN)
+            registration.game_id == game_id
+            and registration.slot == RegistrationSlot.MAIN
+        )
     )
+
 
 def _next_slot(game_id: str, player_status: PlayerStatus) -> RegistrationSlot:
     if player_status == PlayerStatus.PENALIZED:
@@ -54,12 +61,16 @@ def _next_slot(game_id: str, player_status: PlayerStatus) -> RegistrationSlot:
 
     return RegistrationSlot.WAITLIST
 
-def join_game(payload: RegistrationJoin) -> RegistrationRead:
+
+def join_game(
+    payload: RegistrationJoin,
+    player_repository: PlayerRepository,
+) -> RegistrationRead:
     game = get_game(payload.game_id)
     if game is None:
         raise ValueError("Game not found.")
 
-    player = get_player(payload.player_id)
+    player = get_player(player_repository, payload.player_id)
     if player is None:
         raise ValueError("Player not found.")
 
@@ -85,6 +96,7 @@ def join_game(payload: RegistrationJoin) -> RegistrationRead:
     _registrations[registration.id] = registration
     return registration
 
+
 def leave_game(payload: RegistrationLeave) -> bool:
     registration = _get_player_registration(payload.game_id, payload.player_id)
     if registration is None:
@@ -97,6 +109,7 @@ def leave_game(payload: RegistrationLeave) -> bool:
         promote_from_waitlist(payload.game_id)
 
     return True
+
 
 def promote_from_waitlist(game_id: str) -> RegistrationRead | None:
     if _main_count(game_id) >= MAX_PLAYERS:
@@ -116,6 +129,7 @@ def promote_from_waitlist(game_id: str) -> RegistrationRead | None:
     _registrations[promoted.id] = promoted
 
     return promoted
+
 
 def clear_registrations() -> None:
     _registrations.clear()
