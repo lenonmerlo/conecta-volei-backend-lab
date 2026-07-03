@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "postgresql+psycopg://username:password@localhost:5432/conecta_volei_lab"
     )
+    redis_url: str = "redis://localhost:6379/0"
 
     model_config = SettingsConfigDict(
         env_file=".env",
