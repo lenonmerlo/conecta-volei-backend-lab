@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from app.domain.constants import PlayerStatus, PlayerType
+from app.domain.constants import PlayerStatus
 from app.modules.players.repository import PlayerRepository
 from app.modules.players.schemas import PlayerCreate, PlayerRead, PlayerUpdate
 
@@ -33,7 +33,7 @@ def create_player(
         nickname=payload.nickname.strip() if payload.nickname else None,
         whatsapp=payload.whatsapp.strip(),
         gender=payload.gender,
-        type=PlayerType.MEMBER,
+        type=payload.type,
         status=PlayerStatus.PENDING,
         warnings=0,
     )
