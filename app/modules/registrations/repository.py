@@ -24,8 +24,8 @@ class RegistrationRepository:
         return [self._to_read_model(registration) for registration in registrations]
 
     def list_with_players_by_game(
-            self,
-            game_id: str,
+        self,
+        game_id: str,
     ) -> list[RegistrationWithPlayerRead]:
         statement = (
             select(RegistrationModel, PlayerModel)
@@ -51,9 +51,9 @@ class RegistrationRepository:
         ]
 
     def get_player_registration(
-            self,
-            game_id: str,
-            player_id: str,
+        self,
+        game_id: str,
+        player_id: str,
     ) -> RegistrationRead | None:
         registration = self.db.scalar(
             select(RegistrationModel).where(
@@ -107,9 +107,9 @@ class RegistrationRepository:
         return self._to_read_model(model)
 
     def update_slot(
-            self,
-            registration_id: str,
-            slot: RegistrationSlot,
+        self,
+        registration_id: str,
+        slot: RegistrationSlot,
     ) -> RegistrationRead | None:
         model = self.db.get(RegistrationModel, registration_id)
         if model is None:
@@ -125,7 +125,7 @@ class RegistrationRepository:
     def delete(self, registration_id: str) -> bool:
         model = self.db.get(RegistrationModel, registration_id)
         if model is None:
-            return None
+            return False
 
         self.db.delete(model)
         self.db.commit()
