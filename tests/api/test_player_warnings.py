@@ -1,3 +1,6 @@
+from tests.api.conftest import assert_error_response
+
+
 def test_add_warning_keeps_player_active_on_first_warning(
     client,
     create_test_player,
@@ -72,6 +75,7 @@ def test_reset_warnings_sets_player_back_to_active(
     assert response.json()["warnings"] == 0
     assert response.json()["status"] == "active"
 
+
 def test_player_with_two_warnings_joins_waitlist(
     client,
     create_test_player,
@@ -117,27 +121,38 @@ def test_player_with_three_warnings_cannot_join_game(
         },
     )
 
-    assert response.status_code == 403
-    assert response.json() == {
-        "detail": "Blocked players cannot join games."
-    }
+    assert_error_response(
+        response,
+        status_code=403,
+        message="Blocked players cannot join games.",
+    )
+
 
 def test_add_warning_returns_not_found_for_missing_player(client) -> None:
     response = client.post("/api/v1/players/missing-player/warnings")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )
 
 
 def test_remove_warning_returns_not_found_for_missing_player(client) -> None:
     response = client.delete("/api/v1/players/missing-player/warnings")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )
 
 
 def test_reset_warnings_returns_not_found_for_missing_player(client) -> None:
     response = client.post("/api/v1/players/missing-player/warnings/reset")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )

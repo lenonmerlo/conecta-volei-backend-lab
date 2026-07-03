@@ -65,6 +65,7 @@ def create_test_game(client: TestClient):
 
     return _create_test_game
 
+
 @pytest.fixture(autouse=True)
 def disable_registration_joined_event(monkeypatch):
     def fake_publish_registration_joined_event(**event) -> None:
@@ -74,3 +75,19 @@ def disable_registration_joined_event(monkeypatch):
         "app.modules.registrations.service.publish_registration_joined_event",
         fake_publish_registration_joined_event,
     )
+
+
+def assert_error_response(
+    response,
+    *,
+    status_code: int,
+    message: str,
+    code: str = "http_error",
+) -> None:
+    assert response.status_code == status_code
+    assert response.json() == {
+        "error": {
+            "code": code,
+            "message": message,
+        },
+    }

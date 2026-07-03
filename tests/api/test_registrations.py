@@ -2,6 +2,8 @@ from collections.abc import Callable
 
 from fastapi.testclient import TestClient
 
+from tests.api.conftest import assert_error_response
+
 
 def test_join_game_adds_player_to_main_list(
     client: TestClient,
@@ -41,10 +43,11 @@ def test_join_game_rejects_duplicate_player(
     second_response = client.post("/api/v1/registrations/join", json=payload)
 
     assert first_response.status_code == 201
-    assert second_response.status_code == 409
-    assert second_response.json() == {
-        "detail": "Player already registered for this game."
-    }
+    assert_error_response(
+        second_response,
+        status_code=409,
+        message="Player already registered for this game.",
+    )
 
 
 def test_join_game_blocks_blocked_player(
@@ -63,8 +66,11 @@ def test_join_game_blocks_blocked_player(
         },
     )
 
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Blocked players cannot join games."}
+    assert_error_response(
+        response,
+        status_code=403,
+        message="Blocked players cannot join games.",
+    )
 
 
 def test_join_game_places_penalized_player_on_waitlist(
@@ -231,8 +237,12 @@ def test_leave_game_returns_404_when_registration_is_missing(
         },
     )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Registration not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Registration not found.",
+    )
+
 
 def test_join_game_publishes_registration_joined_event(
     client,
