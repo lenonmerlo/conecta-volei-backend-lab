@@ -12,6 +12,7 @@ from app.modules.registrations.schemas import (
     RegistrationLeave,
     RegistrationRead,
     RegistrationSlot,
+    RegistrationWithPlayerRead,
 )
 
 
@@ -21,6 +22,11 @@ def list_registrations(
 ) -> list[RegistrationRead]:
    return repository.list_by_game(game_id)
 
+def list_registrations_with_players(
+    registration_repository: RegistrationRepository,
+    game_id: str,
+) -> list[RegistrationWithPlayerRead]:
+    return registration_repository.list_with_players_by_game(game_id)
 
 def _next_slot(
         repository: RegistrationRepository,

@@ -1,8 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.modules.players.model import PlayerModel
 from app.modules.registrations.model import RegistrationModel
-from app.modules.registrations.schemas import RegistrationRead, RegistrationSlot
+from app.modules.registrations.schemas import (
+    RegistrationRead,
+    RegistrationSlot,
+    RegistrationWithPlayerRead,
+)
 
 
 class RegistrationRepository:
@@ -17,6 +22,33 @@ class RegistrationRepository:
         ).all()
 
         return [self._to_read_model(registration) for registration in registrations]
+
+    def list_with_players_by_game(
+            self,
+            game_id: str,
+    ) -> list[RegistrationWithPlayerRead]:
+        statement = (
+            select(RegistrationModel, PlayerModel)
+            .join(PlayerModel, PlayerModel.id == RegistrationModel.player_id)
+            .where(RegistrationModel.game_id == game_id)
+            .order_by(RegistrationModel.registered_at)
+        )
+
+        rows = self.db.execute(statement).all()
+
+        return [
+            RegistrationWithPlayerRead(
+                id=registration.id,
+                game_id=registration.game_id,
+                player_id=registration.player_id,
+                player_name=player.name,
+                player_nickname=player.nickname,
+                invited_by=registration.invited_by,
+                slot=registration.slot,
+                registered_at=registration.registered_at,
+            )
+            for registration, player in rows
+        ]
 
     def get_player_registration(
             self,
