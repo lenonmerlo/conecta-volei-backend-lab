@@ -1,6 +1,11 @@
 from datetime import date
 
 from app.domain.constants import GameDay
+from app.modules.games.cache import (
+    get_cached_games,
+    invalidate_games_cache,
+    set_cached_games,
+)
 from app.modules.games.repository import GameRepository
 from app.modules.games.schemas import GameCreate, GameRead, GameUpdate
 
@@ -20,8 +25,14 @@ def _build_game_id(game_day: GameDay, game_date: date) -> str:
 
 
 def list_games(repository: GameRepository) -> list[GameRead]:
-    return repository.list()
+    cached_games = get_cached_games()
+    if cached_games is not None:
+        return cached_games
 
+    games = repository.list()
+    set_cached_games(games)
+
+    return games
 
 def get_game(repository: GameRepository, game_id: str) -> GameRead | None:
     return repository.get(game_id)
@@ -44,7 +55,9 @@ def create_game(repository: GameRepository, payload: GameCreate) -> GameRead:
         notes=payload.notes.strip() if payload.notes else None,
     )
 
-    return repository.create(game)
+    created_game = repository.create(game)
+    invalidate_games_cache()
+    return created_game
 
 
 def update_game(
@@ -86,8 +99,14 @@ def update_game(
     if next_id != game_id:
         return repository.replace_id(game_id, updated_game)
 
-    return repository.update(updated_game)
+    updated_game = repository.update(updated_game)
+    invalidate_games_cache()
+    return updated_game
 
 
 def delete_game(repository: GameRepository, game_id: str) -> bool:
-    return repository.delete(game_id)
+    deleted = repository.delete(game_id)
+    if deleted:
+        invalidate_games_cache()
+
+    return deleted
