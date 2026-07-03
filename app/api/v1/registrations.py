@@ -12,6 +12,7 @@ from app.modules.registrations.schemas import (
     RegistrationJoin,
     RegistrationLeave,
     RegistrationRead,
+    RegistrationWithPlayerRead,
 )
 
 router = APIRouter(prefix="/registrations", tags=["registrations"])
@@ -34,17 +35,19 @@ def get_game_repository(
 ) -> GameRepository:
     return GameRepository(db)
 
+DatabaseSession = Annotated[Session, Depends(get_db_session)]
 
-@router.get("", response_model=list[RegistrationRead])
+
+@router.get("", response_model=list[RegistrationWithPlayerRead])
 def list_registrations(
-    registration_repository: Annotated[
-        RegistrationRepository,
-        Depends(get_registration_repository),
-    ],
+    db: DatabaseSession,
     game_id: str = Query(min_length=1),
-) -> list[RegistrationRead]:
-    return service.list_registrations(registration_repository, game_id)
-
+) -> list[RegistrationWithPlayerRead]:
+    registration_repository = RegistrationRepository(db)
+    return service.list_registrations_with_players(
+        registration_repository,
+        game_id,
+    )
 
 @router.post(
     "/join",

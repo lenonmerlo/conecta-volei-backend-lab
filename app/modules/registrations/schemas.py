@@ -26,5 +26,9 @@ class RegistrationRead(BaseModel):
     slot: RegistrationSlot
     registered_at: datetime
 
+class RegistrationWithPlayerRead(RegistrationRead):
+    player_name: str
+    player_nickname: str | None = None
+
 class RegistrationListQuery(BaseModel):
     game_id: str = Field(min_length=1)
