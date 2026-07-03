@@ -105,3 +105,17 @@ def leave_game(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Registration not found.",
         )
+
+@router.post(
+    "/process-guests",
+    response_model=list[RegistrationRead],
+)
+def process_guest_registrations(
+    db: DatabaseSession,
+    game_id: str = Query(min_length=1),
+) -> list[RegistrationRead]:
+    registration_repository = RegistrationRepository(db)
+    return service.process_guest_registrations(
+        game_id,
+        registration_repository,
+    )
