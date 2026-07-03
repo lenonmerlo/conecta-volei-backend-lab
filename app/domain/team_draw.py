@@ -147,7 +147,7 @@ def draw_teams(players: list[DrawPlayer]) -> list[DrawTeam]:
         assign_to_best_team(player)
 
     for player in remaining:
-        assign_to_best_team(player, prefer_female_balance=player.gender == "FF")
+        assign_to_best_team(player, prefer_female_balance=player.gender == "F")
 
     not_assigned = [player for player in players if player.id not in assigned_ids]
     for player in not_assigned:
