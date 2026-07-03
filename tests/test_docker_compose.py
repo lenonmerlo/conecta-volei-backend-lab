@@ -17,3 +17,10 @@ def test_docker_compose_defines_postgres_service() -> None:
     assert "rabbitmq:4-management-alpine" in content
     assert "5672:5672" in content
     assert "15672:15672" in content
+    assert "prometheus:" in content
+    assert "prom/prometheus" in content
+    assert "9090:9090" in content
+    assert "grafana:" in content
+    assert "grafana/grafana" in content
+    assert "3000:3000" in content
+    assert "observability/prometheus.yml" in content
