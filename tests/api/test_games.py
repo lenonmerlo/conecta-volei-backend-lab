@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from tests.api.conftest import assert_error_response
+
 
 def test_create_game_returns_created_game(client: TestClient) -> None:
     response = client.post(
@@ -37,10 +39,11 @@ def test_create_game_rejects_non_wednesday_or_sunday(
         },
     )
 
-    assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Games must be scheduled on Wednesday or Sunday."
-    }
+    assert_error_response(
+        response,
+        status_code=409,
+        message="Games must be scheduled on Wednesday or Sunday.",
+    )
 
 
 def test_create_game_rejects_duplicate_date(client: TestClient) -> None:
@@ -54,8 +57,11 @@ def test_create_game_rejects_duplicate_date(client: TestClient) -> None:
     second_response = client.post("/api/v1/games", json=payload)
 
     assert first_response.status_code == 201
-    assert second_response.status_code == 409
-    assert second_response.json() == {"detail": "Este jogo já está cadastrado."}
+    assert_error_response(
+        second_response,
+        status_code=409,
+        message="Este jogo já está cadastrado.",
+    )
 
 
 def test_get_game_returns_created_game(client: TestClient) -> None:
@@ -79,8 +85,11 @@ def test_get_game_returns_created_game(client: TestClient) -> None:
 def test_get_game_returns_404_when_missing(client: TestClient) -> None:
     response = client.get("/api/v1/games/missing")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Game not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Game not found.",
+    )
 
 
 def test_update_game_returns_updated_game(client: TestClient) -> None:
@@ -139,8 +148,11 @@ def test_update_game_returns_404_when_missing(client: TestClient) -> None:
         json={"location": "Quadra Central"},
     )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Game not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Game not found.",
+    )
 
 
 def test_delete_game_removes_game(client: TestClient) -> None:
@@ -164,5 +176,8 @@ def test_delete_game_removes_game(client: TestClient) -> None:
 def test_delete_game_returns_404_when_missing(client: TestClient) -> None:
     response = client.delete("/api/v1/games/missing")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Game not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Game not found.",
+    )

@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 
+from tests.api.conftest import assert_error_response
+
 
 def test_create_player_returns_created_player(client: TestClient) -> None:
     response = client.post(
@@ -37,10 +39,11 @@ def test_create_player_rejects_duplicate_whatsapp(client: TestClient) -> None:
     second_response = client.post("/api/v1/players", json=payload)
 
     assert first_response.status_code == 201
-    assert second_response.status_code == 409
-    assert second_response.json() == {
-        "detail": "Este WhatsApp já está cadastrado."
-    }
+    assert_error_response(
+        second_response,
+        status_code=409,
+        message="Este WhatsApp já está cadastrado.",
+    )
 
 
 def test_get_player_returns_created_player(client: TestClient) -> None:
@@ -65,8 +68,11 @@ def test_get_player_returns_created_player(client: TestClient) -> None:
 def test_get_player_returns_404_when_missing(client: TestClient) -> None:
     response = client.get("/api/v1/players/missing")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )
 
 
 def test_update_player_returns_updated_player(client: TestClient) -> None:
@@ -122,10 +128,11 @@ def test_update_player_rejects_duplicate_whatsapp(client: TestClient) -> None:
         json={"whatsapp": first_response.json()["whatsapp"]},
     )
 
-    assert response.status_code == 409
-    assert response.json() == {
-        "detail": "Este WhatsApp já está cadastrado."
-    }
+    assert_error_response(
+        response,
+        status_code=409,
+        message="Este WhatsApp já está cadastrado.",
+    )
 
 
 def test_update_player_returns_404_when_missing(client: TestClient) -> None:
@@ -134,8 +141,11 @@ def test_update_player_returns_404_when_missing(client: TestClient) -> None:
         json={"nickname": "Missing"},
     )
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )
 
 
 def test_delete_player_removes_player(client: TestClient) -> None:
@@ -160,8 +170,12 @@ def test_delete_player_removes_player(client: TestClient) -> None:
 def test_delete_player_returns_404_when_missing(client: TestClient) -> None:
     response = client.delete("/api/v1/players/missing")
 
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Player not found."}
+    assert_error_response(
+        response,
+        status_code=404,
+        message="Player not found.",
+    )
+
 
 def test_create_guest_player(client) -> None:
     response = client.post(
@@ -177,6 +191,7 @@ def test_create_guest_player(client) -> None:
 
     assert response.status_code == 201
     assert response.json()["type"] == "guest"
+
 
 def test_update_player_type(client, create_test_player) -> None:
     player = create_test_player("27997348888")
