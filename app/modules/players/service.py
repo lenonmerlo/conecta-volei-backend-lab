@@ -79,3 +79,64 @@ def update_player(
 def delete_player(repository: PlayerRepository, player_id: str) -> bool:
     return repository.delete(player_id)
 
+def _status_from_warnings_count(warnings: int) -> PlayerStatus:
+    if warnings >= 3:
+        return PlayerStatus.BLOCKED
+
+    if warnings == 2:
+        return PlayerStatus.PENALIZED
+
+    return PlayerStatus.ACTIVE
+
+def add_warning(
+        repository: PlayerRepository,
+        player_id: str,
+) -> PlayerRead | None:
+    current_player = get_player(repository, player_id)
+    if current_player is None:
+        return None
+
+    next_warnings = current_player.warnings + 1
+    updated_player = current_player.model_copy(
+        update={
+            "warnings": next_warnings,
+            "status": _status_from_warnings_count(next_warnings),
+        },
+    )
+
+    return repository.update(updated_player)
+
+def remove_warning(
+        repository: PlayerRepository,
+        player_id: str,
+) -> PlayerRead | None:
+    current_player = get_player(repository, player_id)
+    if current_player is None:
+        return None
+
+    next_warnings = max(current_player.warnings - 1, 0)
+    updated_player = current_player.model_copy(
+        update={
+            "warnings": next_warnings,
+            "status": _status_from_warnings_count(next_warnings),
+        },
+    )
+
+    return repository.update(updated_player)
+
+def reset_warnings(
+        repository: PlayerRepository,
+        player_id: str,
+) -> PlayerRead | None:
+    current_player = get_player(repository, player_id)
+    if current_player is None:
+        return None
+
+    updated_player = current_player.model_copy(
+        update={
+            "warnings": 0,
+            "status": PlayerStatus.ACTIVE,
+        },
+    )
+
+    return repository.update(updated_player)
