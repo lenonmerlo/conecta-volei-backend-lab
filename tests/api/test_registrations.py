@@ -233,3 +233,41 @@ def test_leave_game_returns_404_when_registration_is_missing(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Registration not found."}
+
+def test_join_game_publishes_registration_joined_event(
+    client,
+    create_test_player,
+    create_test_game,
+    monkeypatch,
+) -> None:
+    published_events = []
+
+    def fake_publish_registration_joined_event(**event):
+        published_events.append(event)
+
+    monkeypatch.setattr(
+        "app.modules.registrations.service.publish_registration_joined_event",
+        fake_publish_registration_joined_event,
+    )
+
+    player = create_test_player("27998880001")
+    game = create_test_game()
+
+    response = client.post(
+        "/api/v1/registrations/join",
+        json={
+            "game_id": game["id"],
+            "player_id": player["id"],
+            "invited_by": None,
+        },
+    )
+
+    assert response.status_code == 201
+    assert published_events == [
+        {
+            "registration_id": response.json()["id"],
+            "game_id": game["id"],
+            "player_id": player["id"],
+            "slot": response.json()["slot"],
+        }
+    ]

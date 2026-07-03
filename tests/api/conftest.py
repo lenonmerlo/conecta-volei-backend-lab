@@ -64,3 +64,13 @@ def create_test_game(client: TestClient):
         return response.json()
 
     return _create_test_game
+
+@pytest.fixture(autouse=True)
+def disable_registration_joined_event(monkeypatch):
+    def fake_publish_registration_joined_event(**event) -> None:
+        return None
+
+    monkeypatch.setattr(
+        "app.modules.registrations.service.publish_registration_joined_event",
+        fake_publish_registration_joined_event,
+    )

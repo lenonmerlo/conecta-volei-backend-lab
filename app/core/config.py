@@ -9,6 +9,7 @@ class Settings(BaseSettings):
         "postgresql+psycopg://username:password@localhost:5432/conecta_volei_lab"
     )
     redis_url: str = "redis://localhost:6379/0"
+    rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
 
     model_config = SettingsConfigDict(
         env_file=".env",
