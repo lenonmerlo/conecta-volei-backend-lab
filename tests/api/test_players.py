@@ -162,3 +162,29 @@ def test_delete_player_returns_404_when_missing(client: TestClient) -> None:
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Player not found."}
+
+def test_create_guest_player(client) -> None:
+    response = client.post(
+        "/api/v1/players",
+        json={
+            "name": "Guest Player",
+            "nickname": None,
+            "whatsapp": "27997349999",
+            "gender": "M",
+            "type": "guest",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["type"] == "guest"
+
+def test_update_player_type(client, create_test_player) -> None:
+    player = create_test_player("27997348888")
+
+    response = client.patch(
+        f"/api/v1/players/{player['id']}",
+        json={"type": "guest"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["type"] == "guest"

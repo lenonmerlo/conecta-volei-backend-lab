@@ -24,6 +24,7 @@ def create_test_player(client: TestClient):
         *,
         status: str = "active",
         name: str = "Player Test",
+        player_type: str = "member",
     ) -> dict:
         response = client.post(
             "/api/v1/players",
@@ -32,6 +33,7 @@ def create_test_player(client: TestClient):
                 "nickname": None,
                 "whatsapp": whatsapp,
                 "gender": "M",
+                "type": player_type,
             },
         )
         player = response.json()
