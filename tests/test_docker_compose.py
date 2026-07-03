@@ -13,3 +13,7 @@ def test_docker_compose_defines_postgres_service() -> None:
     assert "redis:" in content
     assert "6379:6379" in content
     assert "redis:7-alpine" in content
+    assert "rabbitmq:" in content
+    assert "rabbitmq:4-management-alpine" in content
+    assert "5672:5672" in content
+    assert "15672:15672" in content

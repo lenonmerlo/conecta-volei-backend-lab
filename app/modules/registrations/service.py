@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from app.core.messaging import publish_registration_joined_event
 from app.domain.constants import MAX_PLAYERS, PlayerStatus, PlayerType
 from app.modules.games.repository import GameRepository
 from app.modules.games.service import get_game
@@ -109,8 +110,16 @@ def join_game(
         registered_at=current,
     )
 
-    return registration_repository.create(registration)
+    created_registration = registration_repository.create(registration)
 
+    publish_registration_joined_event(
+        registration_id=created_registration.id,
+        game_id=created_registration.game_id,
+        player_id=created_registration.player_id,
+        slot=created_registration.slot,
+    )
+
+    return created_registration
 
 def leave_game(
     payload: RegistrationLeave,
