@@ -13,6 +13,7 @@ class PlayerModel(Base):
     whatsapp: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
     gender: Mapped[str] = mapped_column(String(1), nullable=False)
     type: Mapped[str] = mapped_column(String(20), nullable=False, default="member")
+    role: Mapped[str] = mapped_column(String(20), nullable=False, default="player")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     warnings: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)

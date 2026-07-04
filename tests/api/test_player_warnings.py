@@ -4,10 +4,15 @@ from tests.api.conftest import assert_error_response
 def test_add_warning_keeps_player_active_on_first_warning(
     client,
     create_test_player,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27991111111")
 
-    response = client.post(f"/api/v1/players/{player['id']}/warnings")
+    response = client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     assert response.status_code == 200
     assert response.json()["warnings"] == 1
@@ -17,11 +22,19 @@ def test_add_warning_keeps_player_active_on_first_warning(
 def test_add_second_warning_penalizes_player(
     client,
     create_test_player,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27992222222")
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    response = client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    response = client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     assert response.status_code == 200
     assert response.json()["warnings"] == 2
@@ -31,12 +44,23 @@ def test_add_second_warning_penalizes_player(
 def test_add_third_warning_blocks_player(
     client,
     create_test_player,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27993333333")
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    response = client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    response = client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     assert response.status_code == 200
     assert response.json()["warnings"] == 3
@@ -46,13 +70,24 @@ def test_add_third_warning_blocks_player(
 def test_remove_warning_recalculates_player_status(
     client,
     create_test_player,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27994444444")
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
-    response = client.delete(f"/api/v1/players/{player['id']}/warnings")
+    response = client.delete(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     assert response.status_code == 200
     assert response.json()["warnings"] == 1
@@ -62,14 +97,28 @@ def test_remove_warning_recalculates_player_status(
 def test_reset_warnings_sets_player_back_to_active(
     client,
     create_test_player,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27995555555")
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
-    response = client.post(f"/api/v1/players/{player['id']}/warnings/reset")
+    response = client.post(
+        f"/api/v1/players/{player['id']}/warnings/reset",
+        headers=admin["headers"],
+    )
 
     assert response.status_code == 200
     assert response.json()["warnings"] == 0
@@ -80,12 +129,20 @@ def test_player_with_two_warnings_joins_waitlist(
     client,
     create_test_player,
     create_test_game,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27996666666")
     game = create_test_game()
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     response = client.post(
         "/api/v1/registrations/join",
@@ -104,13 +161,24 @@ def test_player_with_three_warnings_cannot_join_game(
     client,
     create_test_player,
     create_test_game,
+    create_test_admin,
 ) -> None:
+    admin = create_test_admin()
     player = create_test_player("27997777777")
     game = create_test_game()
 
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
-    client.post(f"/api/v1/players/{player['id']}/warnings")
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
+    client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=admin["headers"],
+    )
 
     response = client.post(
         "/api/v1/registrations/join",
@@ -128,8 +196,16 @@ def test_player_with_three_warnings_cannot_join_game(
     )
 
 
-def test_add_warning_returns_not_found_for_missing_player(client) -> None:
-    response = client.post("/api/v1/players/missing-player/warnings")
+def test_add_warning_returns_not_found_for_missing_player(
+    client,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin()
+
+    response = client.post(
+        "/api/v1/players/missing-player/warnings",
+        headers=admin["headers"],
+    )
 
     assert_error_response(
         response,
@@ -138,8 +214,16 @@ def test_add_warning_returns_not_found_for_missing_player(client) -> None:
     )
 
 
-def test_remove_warning_returns_not_found_for_missing_player(client) -> None:
-    response = client.delete("/api/v1/players/missing-player/warnings")
+def test_remove_warning_returns_not_found_for_missing_player(
+    client,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin()
+
+    response = client.delete(
+        "/api/v1/players/missing-player/warnings",
+        headers=admin["headers"],
+    )
 
     assert_error_response(
         response,
@@ -148,11 +232,53 @@ def test_remove_warning_returns_not_found_for_missing_player(client) -> None:
     )
 
 
-def test_reset_warnings_returns_not_found_for_missing_player(client) -> None:
-    response = client.post("/api/v1/players/missing-player/warnings/reset")
+def test_reset_warnings_returns_not_found_for_missing_player(
+    client,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin()
+
+    response = client.post(
+        "/api/v1/players/missing-player/warnings/reset",
+        headers=admin["headers"],
+    )
 
     assert_error_response(
         response,
         status_code=404,
         message="Player not found.",
+    )
+
+def test_add_warning_requires_admin_role(
+    client,
+    create_test_player,
+    auth_headers,
+) -> None:
+    player = create_test_player("27990000101")
+    common_player = create_test_player("27990000102")
+
+    response = client.post(
+        f"/api/v1/players/{player['id']}/warnings",
+        headers=auth_headers(common_player["whatsapp"]),
+    )
+
+    assert_error_response(
+        response,
+        status_code=403,
+        message="Admin permission required.",
+    )
+
+
+def test_add_warning_requires_authentication(
+    client,
+    create_test_player,
+) -> None:
+    player = create_test_player("27990000103")
+
+    response = client.post(f"/api/v1/players/{player['id']}/warnings")
+
+    assert_error_response(
+        response,
+        status_code=401,
+        message="Invalid authentication credentials.",
     )

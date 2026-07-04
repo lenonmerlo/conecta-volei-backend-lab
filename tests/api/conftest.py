@@ -68,6 +68,48 @@ def disable_registration_joined_event(monkeypatch):
         fake_publish_registration_joined_event,
     )
 
+@pytest.fixture
+def auth_headers(client: TestClient):
+    def _auth_headers(whatsapp: str) -> dict[str, str]:
+        response = client.post(
+            "/api/v1/auth/login",
+            json={"whatsapp": whatsapp},
+        )
+        token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    return _auth_headers
+
+
+@pytest.fixture
+def create_test_admin(client: TestClient, auth_headers):
+    def _create_test_admin(
+        whatsapp: str = "27990000999",
+    ) -> dict:
+        response = client.post(
+            "/api/v1/players",
+            json={
+                "name": "Admin Test",
+                "nickname": None,
+                "whatsapp": whatsapp,
+                "gender": "M",
+                "type": "member",
+            },
+        )
+        admin = response.json()
+
+        client.patch(
+            f"/api/v1/players/{admin['id']}",
+            json={
+                "status": "active",
+                "role": "admin",
+            },
+        )
+
+        admin["headers"] = auth_headers(whatsapp)
+        return admin
+
+    return _create_test_admin
 
 def assert_error_response(
     response,

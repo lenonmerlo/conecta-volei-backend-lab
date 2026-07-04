@@ -46,6 +46,7 @@ def test_process_guest_registrations_promotes_guest_to_main_from_api(
     client,
     create_test_game,
     create_test_player,
+    create_test_admin,
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
@@ -76,9 +77,12 @@ def test_process_guest_registrations_promotes_guest_to_main_from_api(
     assert join_response.status_code == 201
     assert join_response.json()["slot"] == "guests"
 
+    admin = create_test_admin()
+
     response = client.post(
         "/api/v1/registrations/process-guests",
         params={"game_id": game["id"]},
+        headers=admin["headers"],
     )
 
     assert response.status_code == 200

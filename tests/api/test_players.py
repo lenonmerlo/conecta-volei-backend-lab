@@ -148,7 +148,10 @@ def test_update_player_returns_404_when_missing(client: TestClient) -> None:
     )
 
 
-def test_delete_player_removes_player(client: TestClient) -> None:
+def test_delete_player_removes_player(
+        client: TestClient,
+        create_test_admin,
+) -> None:
     create_response = client.post(
         "/api/v1/players",
         json={
@@ -160,15 +163,26 @@ def test_delete_player_removes_player(client: TestClient) -> None:
     )
     player_id = create_response.json()["id"]
 
-    delete_response = client.delete(f"/api/v1/players/{player_id}")
+    admin = create_test_admin()
+    delete_response = client.delete(
+        f"/api/v1/players/{player_id}",
+        headers=admin["headers"],
+    )
     get_response = client.get(f"/api/v1/players/{player_id}")
 
     assert delete_response.status_code == 204
     assert get_response.status_code == 404
 
 
-def test_delete_player_returns_404_when_missing(client: TestClient) -> None:
-    response = client.delete("/api/v1/players/missing")
+def test_delete_player_returns_404_when_missing(
+        client: TestClient,
+        create_test_admin
+) -> None:
+    admin = create_test_admin()
+    response = client.delete(
+        "/api/v1/players/missing",
+        headers=admin["headers"],
+    )
 
     assert_error_response(
         response,
