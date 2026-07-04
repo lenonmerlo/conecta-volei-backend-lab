@@ -54,6 +54,8 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/conecta_volei_lab
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      JWT_SECRET_KEY: conecta-volei-local-secret
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
     ports:
       - "8000:8000"
     depends_on:
