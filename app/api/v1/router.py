@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import games, players, registrations, system, teams
+from app.api.v1 import auth, games, players, registrations, system, teams
 
 router = APIRouter(prefix="/v1")
 
@@ -9,3 +9,4 @@ router.include_router(players.router)
 router.include_router(games.router)
 router.include_router(registrations.router)
 router.include_router(teams.router)
+router.include_router(auth.router)
