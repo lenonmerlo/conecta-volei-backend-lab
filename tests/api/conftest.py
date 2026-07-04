@@ -1,19 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
 
-from app.core.database import SessionLocal
 from app.main import app
 
 
 @pytest.fixture
 def client() -> TestClient:
-    with SessionLocal() as session:
-        session.execute(text("DELETE FROM game_registrations"))
-        session.execute(text("DELETE FROM players"))
-        session.execute(text("DELETE FROM games"))
-        session.commit()
-
     return TestClient(app)
 
 
