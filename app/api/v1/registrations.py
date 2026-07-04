@@ -3,9 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.api.v1.auth import require_admin
 from app.core.database import get_db_session
 from app.modules.games.repository import GameRepository
 from app.modules.players.repository import PlayerRepository
+from app.modules.players.schemas import PlayerRead
 from app.modules.registrations import service
 from app.modules.registrations.repository import RegistrationRepository
 from app.modules.registrations.schemas import (
@@ -112,6 +114,7 @@ def leave_game(
 )
 def process_guest_registrations(
     db: DatabaseSession,
+    _admin: Annotated[PlayerRead, Depends(require_admin)],
     game_id: str = Query(min_length=1),
 ) -> list[RegistrationRead]:
     registration_repository = RegistrationRepository(db)

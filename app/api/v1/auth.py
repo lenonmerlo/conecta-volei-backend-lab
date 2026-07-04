@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db_session
 from app.core.security import decode_access_token
+from app.domain.constants import PlayerRole
 from app.modules.auth import service
 from app.modules.auth.schemas import LoginRequest, TokenResponse
 from app.modules.players.repository import PlayerRepository
@@ -60,6 +61,21 @@ def get_current_player(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(exc),
         ) from exc
+
+
+def require_admin(
+        current_player: Annotated[PlayerRead, Depends(get_current_player)],
+) -> PlayerRead:
+    if current_player.role not in {
+        PlayerRole.ADMIN,
+        PlayerRole.SUPER_ADMIN,
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin permission required."
+        )
+
+    return current_player
 
 
 @router.post("/login", response_model=TokenResponse)

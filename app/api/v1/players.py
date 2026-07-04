@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.v1.auth import require_admin
 from app.core.database import get_db_session
 from app.modules.players import service
 from app.modules.players.repository import PlayerRepository
@@ -57,6 +58,7 @@ def create_player(
 def add_warning(
     player_id: str,
     db: DatabaseSession,
+    admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
     player = service.add_warning(repository, player_id)
@@ -76,6 +78,7 @@ def add_warning(
 def remove_warning(
     player_id: str,
     db: DatabaseSession,
+    admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
     player = service.remove_warning(repository, player_id)
@@ -96,6 +99,7 @@ def remove_warning(
 def reset_warnings(
     player_id: str,
     db: DatabaseSession,
+    admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
     player = service.reset_warnings(repository, player_id)
@@ -134,6 +138,7 @@ def update_player(
 def delete_player(
         player_id: str,
         repository: Annotated[PlayerRepository, Depends(get_player_repository)],
+        _admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> None:
     deleted = service.delete_player(repository, player_id)
     if not deleted:

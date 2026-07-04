@@ -19,5 +19,10 @@ class PlayerType(StrEnum):
     MEMBER = "member"
     GUEST = "guest"
 
+class PlayerRole(StrEnum):
+    PLAYER = "player"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
 SKILL_LEVELS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 

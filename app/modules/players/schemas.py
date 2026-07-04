@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.domain.constants import PlayerStatus, PlayerType
+from app.domain.constants import PlayerRole, PlayerStatus, PlayerType
 
 
 class PlayerCreate(BaseModel):
@@ -16,6 +16,7 @@ class PlayerUpdate(BaseModel):
     whatsapp: str | None = Field(default=None, min_length=8, max_length=20)
     gender: str | None = Field(default=None, min_length=1, max_length=1)
     type: PlayerType | None = None
+    role: PlayerRole | None = None
     status: PlayerStatus | None = None
     warnings: int | None = Field(default=None, ge=0)
 
@@ -26,5 +27,6 @@ class PlayerRead(BaseModel):
     whatsapp: str
     gender: str
     type: PlayerType
+    role: PlayerRole = PlayerRole.PLAYER
     status: PlayerStatus
     warnings: int = 0

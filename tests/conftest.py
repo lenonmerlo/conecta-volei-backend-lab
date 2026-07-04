@@ -45,6 +45,7 @@ TestSessionLocal = sessionmaker(
     autocommit=False,
 )
 
+Base.metadata.drop_all(bind=test_engine)
 Base.metadata.create_all(bind=test_engine)
 
 

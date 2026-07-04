@@ -40,6 +40,7 @@ class PlayerRepository:
             whatsapp=player.whatsapp,
             gender=player.gender,
             type=player.type.value,
+            role=player.role.value,
             status=player.status.value,
             warnings=player.warnings,
         )
@@ -60,6 +61,7 @@ class PlayerRepository:
         model.whatsapp = player.whatsapp
         model.gender = player.gender
         model.type = player.type.value
+        model.role = player.role.value
         model.status = player.status.value
         model.warnings = player.warnings
 
@@ -87,6 +89,7 @@ class PlayerRepository:
             whatsapp=player.whatsapp,
             gender=player.gender,
             type=player.type,
+            role=player.role,
             status=player.status,
             warnings=player.warnings
         )
