@@ -1,8 +1,23 @@
+from datetime import UTC, datetime
+
+
+class FridayDatetime(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return datetime(2026, 7, 3, 12, 0, tzinfo=tz or UTC)
+
+
 def test_guest_registration_goes_to_guests_slot_from_api(
     client,
     create_test_game,
     create_test_player,
+    monkeypatch,
 ) -> None:
+    monkeypatch.setattr(
+        "app.modules.registrations.service.datetime",
+        FridayDatetime,
+    )
+
     game = create_test_game()
     invited_by = create_test_player(
         "27997343401",
@@ -31,7 +46,13 @@ def test_process_guest_registrations_promotes_guest_to_main_from_api(
     client,
     create_test_game,
     create_test_player,
+    monkeypatch,
 ) -> None:
+    monkeypatch.setattr(
+        "app.modules.registrations.service.datetime",
+        FridayDatetime,
+    )
+
     game = create_test_game()
     invited_by = create_test_player(
         "27997343403",

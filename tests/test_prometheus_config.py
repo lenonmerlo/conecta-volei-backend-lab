@@ -10,4 +10,4 @@ def test_prometheus_config_scrapes_api_metrics() -> None:
 
     assert 'job_name: "conecta-volei-api"' in content
     assert 'metrics_path: "/metrics"' in content
-    assert "host.docker.internal:8000" in content
+    assert "api:8000" in content
