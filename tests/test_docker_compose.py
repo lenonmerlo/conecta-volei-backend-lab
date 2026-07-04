@@ -24,3 +24,11 @@ def test_docker_compose_defines_postgres_service() -> None:
     assert "grafana/grafana" in content
     assert "3000:3000" in content
     assert "observability/prometheus.yml" in content
+    assert "api:" in content
+    assert "8000:8000" in content
+    assert (
+            "DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/conecta_volei_lab"
+            in content
+    )
+    assert "REDIS_URL: redis://redis:6379/0" in content
+    assert "RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/" in content
