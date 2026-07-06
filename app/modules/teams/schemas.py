@@ -16,6 +16,18 @@ class DrawTeamsPayload(BaseModel):
     players: list[DrawPlayerPayload] = Field(min_length=1)
 
 
+class SwapTeamPayload(BaseModel):
+    name: str = Field(min_length=1)
+    players: list[DrawPlayerPayload] = Field(min_length=1)
+
+
+class SwapTeamsPayload(BaseModel):
+    teams: list[SwapTeamPayload] = Field(min_length=2)
+    from_team_index: int = Field(ge=0)
+    from_player_id: str = Field(min_length=1)
+    to_team_index: int = Field(ge=0)
+    to_player_id: str = Field(min_length=1)
+
 
 class DrawPlayerRead(BaseModel):
     id: str
