@@ -43,10 +43,13 @@ def create_test_player(client: TestClient):
 
 
 @pytest.fixture
-def create_test_game(client: TestClient):
+def create_test_game(client: TestClient, create_test_admin):
+    admin = create_test_admin("27990000888")
+
     def _create_test_game() -> dict:
         response = client.post(
             "/api/v1/games",
+            headers=admin["headers"],
             json={
                 "date": "2026-07-05",
                 "location": "Arena Conecta",
