@@ -386,3 +386,48 @@ def test_process_guest_registrations_writes_audit_log(
         "new_slot": "main",
         "invited_by": invited_by["id"],
     }
+
+def test_list_audit_logs_endpoint_returns_logs_for_admin(
+    client,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin("27990010000")
+
+    client.post(
+        "/api/v1/players",
+        json={
+            "name": "Audit Endpoint Player",
+            "nickname": None,
+            "whatsapp": "27990010001",
+            "gender": "M",
+        },
+    )
+
+    response = client.get(
+        "/api/v1/audit-logs",
+        headers=admin["headers"],
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["action"] == "player.created"
+
+
+def test_list_audit_logs_endpoint_requires_admin(
+    client,
+    create_test_player,
+    auth_headers,
+) -> None:
+    player = create_test_player("27990010002")
+
+    response = client.get(
+        "/api/v1/audit-logs",
+        headers=auth_headers(player["whatsapp"]),
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "error": {
+            "code": "http_error",
+            "message": "Admin permission required.",
+        },
+    }
