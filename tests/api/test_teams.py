@@ -76,3 +76,107 @@ def test_draw_teams_requires_admin(client: TestClient) -> None:
         status_code=401,
         message="Invalid authentication credentials.",
     )
+
+
+def test_swap_teams_returns_swapped_players(
+    client: TestClient,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin("27990200003")
+
+    response = client.post(
+        "/api/v1/teams/swap",
+        headers=admin["headers"],
+        json={
+            "teams": [
+                {
+                    "name": "Time A",
+                    "players": [
+                        make_player(1, skill_level=5),
+                        make_player(2, skill_level=3),
+                    ],
+                },
+                {
+                    "name": "Time B",
+                    "players": [
+                        make_player(3, skill_level=2),
+                        make_player(4, skill_level=4),
+                    ],
+                },
+            ],
+            "from_team_index": 0,
+            "from_player_id": "p-1",
+            "to_team_index": 1,
+            "to_player_id": "p-3",
+        },
+    )
+
+    assert response.status_code == 200
+
+    teams = response.json()
+    assert teams[0]["players"][0]["id"] == "p-3"
+    assert teams[1]["players"][0]["id"] == "p-1"
+    assert teams[0]["total_level"] == 5
+    assert teams[1]["total_level"] == 9
+
+
+def test_swap_teams_returns_original_when_player_is_missing(
+    client: TestClient,
+    create_test_admin,
+) -> None:
+    admin = create_test_admin("27990200004")
+
+    response = client.post(
+        "/api/v1/teams/swap",
+        headers=admin["headers"],
+        json={
+            "teams": [
+                {
+                    "name": "Time A",
+                    "players": [make_player(1)],
+                },
+                {
+                    "name": "Time B",
+                    "players": [make_player(2)],
+                },
+            ],
+            "from_team_index": 0,
+            "from_player_id": "missing-player",
+            "to_team_index": 1,
+            "to_player_id": "p-2",
+        },
+    )
+
+    assert response.status_code == 200
+
+    teams = response.json()
+    assert teams[0]["players"][0]["id"] == "p-1"
+    assert teams[1]["players"][0]["id"] == "p-2"
+
+
+def test_swap_teams_requires_admin(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/teams/swap",
+        json={
+            "teams": [
+                {
+                    "name": "Time A",
+                    "players": [make_player(1)],
+                },
+                {
+                    "name": "Time B",
+                    "players": [make_player(2)],
+                },
+            ],
+            "from_team_index": 0,
+            "from_player_id": "p-1",
+            "to_team_index": 1,
+            "to_player_id": "p-2",
+        },
+    )
+
+    assert_error_response(
+        response,
+        status_code=401,
+        message="Invalid authentication credentials.",
+    )
