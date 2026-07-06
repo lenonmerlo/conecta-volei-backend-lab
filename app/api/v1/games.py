@@ -3,10 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.v1.auth import require_admin
 from app.core.database import get_db_session
 from app.modules.games import service
 from app.modules.games.repository import GameRepository
 from app.modules.games.schemas import GameCreate, GameRead, GameUpdate
+from app.modules.players.schemas import PlayerRead
 
 router = APIRouter(prefix="/games", tags=["games"])
 
@@ -40,6 +42,7 @@ def get_game(
 def create_game(
         payload: GameCreate,
         repository: Annotated[GameRepository, Depends(get_game_repository)],
+        _admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> GameRead:
     try:
         return service.create_game(repository, payload)
@@ -54,6 +57,7 @@ def update_game(
         game_id: str,
         payload: GameUpdate,
         repository: Annotated[GameRepository, Depends(get_game_repository)],
+        _admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> GameRead:
     try:
         game = service.update_game(repository, game_id, payload)
@@ -75,6 +79,7 @@ def update_game(
 def delete_game(
         game_id: str,
         repository: Annotated[GameRepository, Depends(get_game_repository)],
+        _admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> None:
     deleted = service.delete_game(repository, game_id)
     if not deleted:
