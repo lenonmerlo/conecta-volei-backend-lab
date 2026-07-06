@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.auth import require_admin
 from app.core.database import get_db_session
+from app.modules.audit_logs.repository import AuditLogRepository
+from app.modules.audit_logs.schemas import AuditLogCreate
+from app.modules.audit_logs.service import create_audit_log
 from app.modules.players import service
 from app.modules.players.repository import PlayerRepository
 from app.modules.players.schemas import PlayerCreate, PlayerRead, PlayerUpdate
@@ -41,15 +44,32 @@ def get_player(
 @router.post("", response_model=PlayerRead, status_code=status.HTTP_201_CREATED)
 def create_player(
         payload: PlayerCreate,
-        repository: Annotated[PlayerRepository, Depends(get_player_repository)],
+        db: DatabaseSession
 ) -> PlayerRead:
+    repository = PlayerRepository(db)
+    audit_log_repository = AuditLogRepository(db)
     try:
-        return service.create_player(repository, payload)
+        player = service.create_player(repository, payload)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
         ) from exc
+
+    create_audit_log(
+        audit_log_repository,
+        AuditLogCreate(
+            target_player_id=player.id,
+            action="player.created",
+            details={
+                "status": player.status,
+                "type": player.type,
+                "role": player.role,
+            },
+        ),
+    )
+
+    return player
 
 @router.post(
     "/{player_id}/warnings",
@@ -61,12 +81,60 @@ def add_warning(
     admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
-    player = service.add_warning(repository, player_id)
+    audit_log_repository = AuditLogRepository(db)
 
-    if player is None:
+    current_player = service.get_player(repository, player_id)
+    if current_player is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found.",
+        )
+
+    player = service.add_warning(repository, player_id)
+
+    create_audit_log(
+        audit_log_repository,
+        AuditLogCreate(
+            actor_player_id=admin.id,
+            target_player_id=player.id,
+            action="player.warning_added",
+            details={
+                "previous_warnings": current_player.warnings,
+                "new_warnings": player.warnings,
+                "previous_status": current_player.status,
+                "new_status": player.status,
+            },
+        ),
+    )
+
+    if current_player.status != player.status and player.status == "penalized":
+        create_audit_log(
+            audit_log_repository,
+            AuditLogCreate(
+                actor_player_id=admin.id,
+                target_player_id=player.id,
+                action="player.penalized",
+                details={
+                    "warnings": player.warnings,
+                    "previous_status": current_player.status,
+                    "new_status": player.status,
+                },
+            ),
+        )
+
+    if current_player.status != player.status and player.status == "blocked":
+        create_audit_log(
+            audit_log_repository,
+            AuditLogCreate(
+                actor_player_id=admin.id,
+                target_player_id=player.id,
+                action="player.blocked",
+                details={
+                    "warnings": player.warnings,
+                    "previous_status": current_player.status,
+                    "new_status": player.status,
+                },
+            ),
         )
 
     return player
@@ -81,13 +149,31 @@ def remove_warning(
     admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
-    player = service.remove_warning(repository, player_id)
+    audit_log_repository = AuditLogRepository(db)
 
-    if player is None:
+    current_player = service.get_player(repository, player_id)
+    if current_player is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found.",
         )
+
+    player = service.remove_warning(repository, player_id)
+
+    create_audit_log(
+        audit_log_repository,
+        AuditLogCreate(
+            actor_player_id=admin.id,
+            target_player_id=player.id,
+            action="player.warning_removed",
+            details={
+                "previous_warnings": current_player.warnings,
+                "new_warnings": player.warnings,
+                "previous_status": current_player.status,
+                "new_status": player.status,
+            },
+        ),
+    )
 
     return player
 
@@ -102,13 +188,31 @@ def reset_warnings(
     admin: Annotated[PlayerRead, Depends(require_admin)],
 ) -> PlayerRead:
     repository = PlayerRepository(db)
-    player = service.reset_warnings(repository, player_id)
+    audit_log_repository = AuditLogRepository(db)
 
-    if player is None:
+    current_player = service.get_player(repository, player_id)
+    if current_player is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found.",
         )
+
+    player = service.reset_warnings(repository, player_id)
+
+    create_audit_log(
+        audit_log_repository,
+        AuditLogCreate(
+            actor_player_id=admin.id,
+            target_player_id=player.id,
+            action="player.warnings_reset",
+            details={
+                "previous_warnings": current_player.warnings,
+                "new_warnings": player.warnings,
+                "previous_status": current_player.status,
+                "new_status": player.status,
+            },
+        ),
+    )
 
     return player
 
