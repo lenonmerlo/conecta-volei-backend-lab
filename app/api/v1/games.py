@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.api.v1.auth import require_admin
 from app.core.database import get_db_session
+from app.modules.game_teams.repository import GameTeamRepository
+from app.modules.game_teams.schemas import GameTeamRead, SaveGameTeamsPayload
+from app.modules.game_teams.service import list_game_teams, save_game_teams
 from app.modules.games import service
 from app.modules.games.repository import GameRepository
 from app.modules.games.schemas import GameCreate, GameRead, GameUpdate
@@ -12,10 +15,15 @@ from app.modules.players.schemas import PlayerRead
 
 router = APIRouter(prefix="/games", tags=["games"])
 
-def get_game_repository(
-        db: Annotated[Session, Depends(get_db_session)],
-) -> GameRepository:
+DatabaseSession = Annotated[Session, Depends(get_db_session)]
+
+
+def get_game_repository(db: DatabaseSession) -> GameRepository:
     return GameRepository(db)
+
+
+def get_game_team_repository(db: DatabaseSession) -> GameTeamRepository:
+    return GameTeamRepository(db)
 
 @router.get("", response_model=list[GameRead])
 def list_games(
@@ -88,5 +96,46 @@ def delete_game(
             detail="Game not found.",
         )
 
+@router.get("/{game_id}/teams", response_model=list[GameTeamRead])
+def get_game_teams(
+    game_id: str,
+    game_repository: Annotated[
+        GameRepository,
+        Depends(get_game_repository),
+    ],
+    team_repository: Annotated[
+        GameTeamRepository,
+        Depends(get_game_team_repository),
+    ],
+) -> list[GameTeamRead]:
+    try:
+        return list_game_teams(game_repository, team_repository, game_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
 
+
+@router.put("/{game_id}/teams", response_model=list[GameTeamRead])
+def put_game_teams(
+    game_id: str,
+    payload: SaveGameTeamsPayload,
+    game_repository: Annotated[
+        GameRepository,
+        Depends(get_game_repository),
+    ],
+    team_repository: Annotated[
+        GameTeamRepository,
+        Depends(get_game_team_repository),
+    ],
+    _admin: Annotated[PlayerRead, Depends(require_admin)],
+) -> list[GameTeamRead]:
+    try:
+        return save_game_teams(game_repository, team_repository, game_id, payload)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
 
