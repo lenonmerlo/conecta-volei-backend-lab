@@ -55,6 +55,7 @@ jobs:
       RABBITMQ_URL: amqp://guest:guest@localhost:5672/
       JWT_SECRET_KEY: conecta-volei-ci-secret
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+      JWT_REFRESH_TOKEN_EXPIRE_MINUTES: "43200"
 
     steps:
       - name: Checkout
@@ -78,3 +79,9 @@ jobs:
 
       - name: Run Pytest
         run: python -m pytest
+
+      - name: Validate Docker Compose
+        run: docker compose config
+
+      - name: Build Docker image
+        run: docker build -t conecta-volei-backend-lab:ci .
