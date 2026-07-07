@@ -41,6 +41,9 @@ Principais capacidades implementadas:
 - tratamento especial de convidados em janela específica;
 - trilha de auditoria para ações críticas;
 - métricas HTTP para Prometheus.
+- sorteio automático de times com balanceamento por nível, capitães, levantadores e gênero;
+- troca manual de jogadores entre times sorteados;
+- persistência de times por jogo (`game_teams`);
 
 Prefixo base da API: `/api/v1`
 
@@ -173,36 +176,56 @@ Autenticação e RBAC são aplicados apenas nas rotas protegidas, como warnings,
 - Ao sair um jogador da lista principal, o primeiro da waitlist é promovido automaticamente.
 - Convidados (`guest`) com `invited_by` durante janela de quinta/sexta entram em `guests` e podem ser processados depois via endpoint administrativo.
 
+### Times
+
+- O sorteio considera jogadores da lista principal.
+- Menos de 8 jogadores retorna lista vazia.
+- A partir de 8 jogadores são gerados 2 times.
+- A partir de 14 jogadores são gerados 3 times.
+- O algoritmo considera:
+  - nível técnico;
+  - capitães;
+  - levantadores;
+  - posição;
+  - distribuição de jogadoras.
+- A API permite trocar jogadores entre times já sorteados.
+- Times confirmados podem ser salvos por jogo.
+- Ao salvar novos times para um jogo, os times anteriores daquele jogo são substituídos.
+
 ## Funcionalidades da API
 
 Autenticação exigida usa `Authorization: Bearer <token>`.
 
-| Método | Rota                                               | Descrição                                  | Auth  |
-| ------ | -------------------------------------------------- | ------------------------------------------ | ----- |
-| GET    | `/api/v1/health`                                   | Health check simples                       | Não   |
-| GET    | `/api/v1/ready`                                    | Readiness check (DB + cache)               | Não   |
-| POST   | `/api/v1/auth/login`                               | Login por WhatsApp e emissão de JWT        | Não   |
-| GET    | `/api/v1/auth/me`                                  | Retorna jogador autenticado                | Sim   |
-| GET    | `/api/v1/players`                                  | Lista jogadores                            | Não   |
-| GET    | `/api/v1/players/{player_id}`                      | Busca jogador por ID                       | Não   |
-| POST   | `/api/v1/players`                                  | Cria jogador                               | Não   |
-| PATCH  | `/api/v1/players/{player_id}`                      | Atualiza jogador                           | Não   |
-| DELETE | `/api/v1/players/{player_id}`                      | Remove jogador                             | Admin |
-| POST   | `/api/v1/players/{player_id}/warnings`             | Adiciona warning                           | Admin |
-| DELETE | `/api/v1/players/{player_id}/warnings`             | Remove warning                             | Admin |
-| POST   | `/api/v1/players/{player_id}/warnings/reset`       | Zera warnings                              | Admin |
-| GET    | `/api/v1/games`                                    | Lista jogos (com cache)                    | Não   |
-| GET    | `/api/v1/games/{game_id}`                          | Busca jogo por ID                          | Não   |
-| POST   | `/api/v1/games`                                    | Cria jogo                                  | Não   |
-| PATCH  | `/api/v1/games/{game_id}`                          | Atualiza jogo                              | Não   |
-| DELETE | `/api/v1/games/{game_id}`                          | Remove jogo                                | Não   |
-| GET    | `/api/v1/registrations?game_id=...`                | Lista inscrições por jogo                  | Não   |
-| POST   | `/api/v1/registrations/join`                       | Inscreve jogador no jogo                   | Não   |
-| POST   | `/api/v1/registrations/leave`                      | Remove inscrição do jogo                   | Não   |
-| POST   | `/api/v1/registrations/process-guests?game_id=...` | Processa fila de convidados                | Admin |
-| GET    | `/api/v1/audit-logs`                               | Lista logs de auditoria                    | Admin |
-| GET    | `/api/v1/teams`                                    | Endpoint placeholder (retorna lista vazia) | Não   |
-| GET    | `/metrics`                                         | Métricas Prometheus                        | Não   |
+| Método | Rota                                               | Descrição                             | Auth  |
+| ------ | -------------------------------------------------- | ------------------------------------- | ----- |
+| GET    | `/api/v1/health`                                   | Health check simples                  | Não   |
+| GET    | `/api/v1/ready`                                    | Readiness check (DB + cache)          | Não   |
+| POST   | `/api/v1/auth/login`                               | Login por WhatsApp e emissão de JWT   | Não   |
+| GET    | `/api/v1/auth/me`                                  | Retorna jogador autenticado           | Sim   |
+| GET    | `/api/v1/players`                                  | Lista jogadores                       | Não   |
+| GET    | `/api/v1/players/{player_id}`                      | Busca jogador por ID                  | Não   |
+| POST   | `/api/v1/players`                                  | Cria jogador                          | Não   |
+| PATCH  | `/api/v1/players/{player_id}`                      | Atualiza jogador                      | Não   |
+| DELETE | `/api/v1/players/{player_id}`                      | Remove jogador                        | Admin |
+| POST   | `/api/v1/players/{player_id}/warnings`             | Adiciona warning                      | Admin |
+| DELETE | `/api/v1/players/{player_id}/warnings`             | Remove warning                        | Admin |
+| POST   | `/api/v1/players/{player_id}/warnings/reset`       | Zera warnings                         | Admin |
+| GET    | `/api/v1/games`                                    | Lista jogos (com cache)               | Não   |
+| GET    | `/api/v1/games/{game_id}`                          | Busca jogo por ID                     | Não   |
+| POST   | `/api/v1/games`                                    | Cria jogo                             | Admin |
+| PATCH  | `/api/v1/games/{game_id}`                          | Atualiza jogo                         | Admin |
+| DELETE | `/api/v1/games/{game_id}`                          | Remove jogo                           | Admin |
+| GET    | `/api/v1/games/{game_id}/teams`                    | Lista times salvos do jogo            | Não   |
+| PUT    | `/api/v1/games/{game_id}/teams`                    | Substitui times salvos do jogo        | Admin |
+| GET    | `/api/v1/registrations?game_id=...`                | Lista inscrições por jogo             | Não   |
+| POST   | `/api/v1/registrations/join`                       | Inscreve jogador no jogo              | Não   |
+| POST   | `/api/v1/registrations/leave`                      | Remove inscrição do jogo              | Não   |
+| POST   | `/api/v1/registrations/process-guests?game_id=...` | Processa fila de convidados           | Admin |
+| GET    | `/api/v1/audit-logs`                               | Lista logs de auditoria               | Admin |
+| GET    | `/api/v1/teams`                                    | Lista times (placeholder compatível)  | Não   |
+| POST   | `/api/v1/teams/draw`                               | Sorteia times a partir de jogadores   | Admin |
+| POST   | `/api/v1/teams/swap`                               | Troca jogadores entre times sorteados | Admin |
+| GET    | `/metrics`                                         | Métricas Prometheus                   | Não   |
 
 ## Modelo de Dados
 
@@ -210,6 +233,7 @@ Autenticação exigida usa `Authorization: Bearer <token>`.
 erDiagram
     PLAYERS ||--o{ GAME_REGISTRATIONS : registers
     GAMES ||--o{ GAME_REGISTRATIONS : has
+    GAMES ||--o{ GAME_TEAMS : has
     PLAYERS ||--o{ AUDIT_LOGS : actor
     PLAYERS ||--o{ AUDIT_LOGS : target
     GAMES ||--o{ AUDIT_LOGS : context
@@ -245,6 +269,15 @@ erDiagram
       string invited_by FK
       string slot
       datetime registered_at
+    }
+
+    GAME_TEAMS {
+      string id PK
+      string game_id FK
+      string team_name
+      json players
+      float total_level
+      datetime created_at
     }
 
     AUDIT_LOGS {
@@ -291,6 +324,8 @@ app/
     games/
     registrations/
     audit_logs/
+    teams/
+    game_teams/
 
 tests/
 alembic/
@@ -380,6 +415,7 @@ Histórico atual de migrations Alembic:
 - `d545fcee814f`: cria tabela `game_registrations`.
 - `a1f2b3c4d5e6`: adiciona coluna `role` em `players`.
 - `b2c3d4e5f6a7`: cria tabela `audit_logs`.
+- `c3d4e5f6a7b8`: cria tabela `game_teams`.
 
 Comandos úteis:
 
@@ -420,6 +456,8 @@ Cobertura funcional existente inclui:
 - CRUD de players/games;
 - regras de warning/status;
 - fluxo de inscrições (main/waitlist/guests);
+- sorteio, troca e persistência de times por jogo;
+- proteção administrativa para rotas críticas de jogos e times;
 - auditoria de eventos;
 - configurações de Dockerfile, compose e métricas.
 
@@ -448,11 +486,11 @@ O seed cria:
 
 ## Limitações Atuais e Próximos Passos
 
-Este projeto é um backend lab em evolução. Alguns pontos foram mantidos intencionalmente simples para priorizar clareza arquitetural, cobertura de testes e demonstração das regras de negócio principais.
+Este projeto é um backend lab em evolução. O foco atual é demonstrar arquitetura modular, regras de negócio testadas, integrações de infraestrutura e uma API próxima de um cenário real de produto.
 
-- O módulo de sorteio de times já possui regras de domínio testadas, mas o endpoint `/api/v1/teams` ainda pode evoluir para expor o fluxo completo via API.
 - O projeto publica eventos de inscrição no RabbitMQ, mas ainda não implementa um consumidor dedicado para processamento assíncrono.
-- A autenticação JWT e o RBAC já existem, mas algumas rotas podem receber políticas mais restritivas conforme uma definição final de produto, especialmente operações administrativas de jogos e cadastros.
-- O projeto ainda pode evoluir com versionamento semântico, changelog e pipeline CI/CD completo.
+- O módulo de times já cobre sorteio, troca e persistência, mas pode evoluir para histórico/versionamento de sorteios por jogo.
+- A autenticação JWT e o RBAC já existem, mas podem evoluir para fluxo completo de credenciais, refresh token e política mais granular por papel.
+- O projeto ainda pode evoluir com versionamento semântico, changelog, dashboards Grafana versionados e pipeline CI/CD mais completo.
 
 ---
