@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.database import Base, get_db_session
 from app.main import app
 from app.modules.audit_logs import model as audit_logs_model  # noqa: F401
+from app.modules.game_teams import model as game_teams_model  # noqa: F401
 from app.modules.games import model as games_model  # noqa: F401
 from app.modules.players import model as players_model  # noqa: F401
 from app.modules.registrations import model as registrations_model  # noqa: F401
