@@ -9,7 +9,7 @@ from app.core.database import get_db_session
 from app.core.security import decode_access_token
 from app.domain.constants import PlayerRole
 from app.modules.auth import service
-from app.modules.auth.schemas import LoginRequest, TokenResponse
+from app.modules.auth.schemas import LoginRequest, RefreshTokenRequest, TokenResponse
 from app.modules.players.repository import PlayerRepository
 from app.modules.players.schemas import PlayerRead
 
@@ -88,6 +88,27 @@ def login(
 ) -> TokenResponse:
     try:
         return service.login_by_whatsapp(repository, payload.whatsapp)
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(exc),
+        ) from exc
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(
+    payload: RefreshTokenRequest,
+    repository: Annotated[
+        PlayerRepository,
+        Depends(get_player_repository),
+    ],
+) -> TokenResponse:
+    try:
+        return service.refresh_access_token(repository, payload.refresh_token)
     except PermissionError as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
