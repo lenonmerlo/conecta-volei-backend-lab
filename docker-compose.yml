@@ -89,6 +89,8 @@ services:
       - "3000:3000"
     volumes:
       - conecta_volei_grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
     depends_on:
       - prometheus
 
