@@ -13,6 +13,17 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "change-me-in-local-env"
     jwt_access_token_expire_minutes: int = 60 * 24
     jwt_refresh_token_expire_minutes: int = 60 * 24 * 30
+    cors_allowed_origins: str = (
+        "http://localhost:5173,http://localhost:5174"
+    )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.cors_allowed_origins.split(",")
+            if origin.strip()
+        ]
 
     model_config = SettingsConfigDict(
         env_file=".env",
